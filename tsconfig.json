@@ -1,6 +1,8 @@
+
+  
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "es6",
     "module": "commonjs",
     "lib": ["dom", "es6", "es2017", "esnext.asynciterable"],
     "skipLibCheck": true,
@@ -24,5 +26,5 @@
     "baseUrl": "."
   },
   "exclude": ["node_modules"],
-  "include": ["./src/**/*.ts", "mikro-orm.config.ts"]
+  "include": ["./src/**/*.tsx", "./src/**/*.ts"]
 }
