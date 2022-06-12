@@ -1,7 +1,7 @@
 import { __prod__ } from './constants'
 import { MikroORM } from '@mikro-orm/core'
 import path from 'path'
-import { Post } from './entities/Post'
+import { Post, User } from './entities'
 
 export default {
   dbName: 'lireddit',
@@ -9,7 +9,7 @@ export default {
   password: 'postgres',
   debug: !__prod__,
   type: 'postgresql',
-  entities: [Post], // Each entity describe the shape of a column of a specific table
+  entities: [Post, User], // Each entity describe the shape of a column of a specific table
   allowGlobalContext: true,
   migrations: {
     path: path.join(__dirname, './migrations'), // path to the folder with migrations

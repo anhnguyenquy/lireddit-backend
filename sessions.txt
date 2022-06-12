@@ -1,0 +1,25 @@
+Session flow:
+
+1. req.session.userID = user.id
+=> Initialise req.session from empty object into something like this:
+{ userID: 1 } -> This is then sent to redis with the key being the sessionID. 
+                 Every time req.session changes, the redis value is updated according to the key.
+
+A redis key looks something like this:
+sess:VmqsS60iN1CnEm-EKT82mTJaXGmcNhoN
+
+The value associated with this key is the JSON string of the req.session object:
+127.0.0.1:6379> get sess:VmqsS60iN1CnEm-EKT82mTJaXGmcNhoN
+"{\"cookie\":{\"originalMaxAge\":315360000000,\"expires\":\"2032-06-09T10:28:58.843Z\",\"secure\":true,\"httpOnly\":true,\"path\":\"/\",\"sameSite\":\"lax\"},\"userID\":1}"
+
+2. Using REDIS_SECRET, the session ID is encrypted and stored in a new cookie.
+The cookie is then sent to the client and set to the browser.
+
+This is an example of the value of a qid cookie:
+s:Eo1l_ICMKTZfuZ-wbJ6Gd8srvpupY81y.VKchvCF612FWYjV23uk2k8w+5SqrPAsNuSAEh1L3g7s
+
+3. When a user makes a request, the cookie is sent to the server.
+
+4. The server decrypts the cookie using REDIS_SECRET to get the session ID/redis key.
+5. The server then retrieves the redis value associated with the session ID and attaches it to the request object at req.session.
+

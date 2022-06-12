@@ -1,7 +1,7 @@
 import { Entity, PrimaryKey, Property } from '@mikro-orm/core'
 import { Field, Int, ObjectType } from 'type-graphql'
 
-@ObjectType() // The ObjectType and Field decoraters are used to convert TypeScript types into a TypeGraphQL types
+@ObjectType() // The ObjectType and Field decorators use TypeScript to define GraphQL types.
 @Entity()
 export class Post {
   @Field(() => Int)
@@ -9,12 +9,12 @@ export class Post {
   id!: number
 
   @Field(() => Date)
-  @Property({ type: 'date', onCreate: () => new Date() })
-  createdAt: Date
+  @Property({ type: 'date', nullable: true })
+  createdAt?: Date = new Date()
 
   @Field(() => Date)
-  @Property({ type: 'date', onUpdate: () => new Date() })
-  updatedAt: Date
+  @Property({ type: 'date', nullable: true, onUpdate: () => new Date() })
+  updatedAt?: Date = new Date()
 
   @Field()
   @Property({ type: 'text' })
