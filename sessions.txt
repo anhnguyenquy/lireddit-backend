@@ -22,4 +22,7 @@ s:Eo1l_ICMKTZfuZ-wbJ6Gd8srvpupY81y.VKchvCF612FWYjV23uk2k8w+5SqrPAsNuSAEh1L3g7s
 
 4. The server decrypts the cookie using REDIS_SECRET to get the session ID/redis key.
 5. The server then retrieves the redis value associated with the session ID and attaches it to the request object at req.session.
-
+6. When the user logs out:
+- req.session is emptied.
+- The redis value associated with the session ID is deleted.
+- The 'qid' cookie is unset.
