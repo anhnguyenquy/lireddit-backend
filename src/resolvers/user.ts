@@ -1,21 +1,31 @@
-import { User } from '../../entities/TypeORM'
-import { TypeORMContext } from '../../types'
-import { Resolver, Mutation, Arg, Ctx, Query } from 'type-graphql'
 import argon2 from 'argon2'
-import { COOKIE_NAME } from '../../constants'
-import { isValidEmail, sendEmail, validateLogin, validateRegister } from '../../utils'
-import { UserResponse, EmailUsernamePasswordInput, LoginInputs, ForgotPasswordResponse } from '../../interfaces'
+import { Arg, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql'
 import { v4 } from 'uuid'
-import { FORGET_PASSWORD_PREFIX } from '../../constants'
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from '../constants'
+import { User } from '../entities'
+import { EmailUsernamePasswordInput, ForgotPasswordResponse, LoginInputs, UserResponse } from '../graphql-types'
+import { Context } from '../types'
+import { isValidEmail, sendEmail, validateLogin, validateRegister } from '../utils'
 
-@Resolver()
+@Resolver(User)
 export class UserResolver {
+
+  @FieldResolver(() => String)
+  email(
+    @Root() user: User,
+    @Ctx() { req }: Context
+  ): string | null {
+    if (req.session.userId === user.id) {
+      return user.email!
+    }
+    return ''
+  }
 
   @Mutation(() => UserResponse)
   async changePassword(
     @Arg('token') token: string,
     @Arg('newPassword') newPassword: string,
-    @Ctx() { redis, req }: TypeORMContext
+    @Ctx() { redis, req }: Context
   ): Promise<UserResponse> {
     if (newPassword.length < 8) {
       return {
@@ -36,8 +46,8 @@ export class UserResolver {
 
     const redisKey = FORGET_PASSWORD_PREFIX + token
 
-    const userID = await redis.get(redisKey)
-    if (!userID) { // Assuming the user doesn't tamper with the token, if the token is not found in redis, it means it has expired.
+    const userId = await redis.get(redisKey)
+    if (!userId) { // Assuming the user doesn't tamper with the token, if the token is not found in redis, it means it has expired.
       return {
         errors: [{
           field: 'token',
@@ -45,7 +55,7 @@ export class UserResolver {
         }]
       }
     }
-    const id = parseInt(userID)
+    const id = parseInt(userId)
     const user = await User.findOneBy({ id })
 
     if (!user) {
@@ -60,7 +70,7 @@ export class UserResolver {
     await User.update({ id }, { password: await argon2.hash(newPassword) })
     await redis.del(redisKey)    // deletes the token from redis so that the link can only be used once
 
-    req.session.userID = user.id // logs in after changing password
+    req.session.userId = user.id // logs in after changing password
 
     return { user }
   }
@@ -68,7 +78,7 @@ export class UserResolver {
   @Mutation(() => ForgotPasswordResponse)
   async forgotPassword(
     @Arg('email') email: string,
-    @Ctx() { redis }: TypeORMContext
+    @Ctx() { redis }: Context
   ): Promise<ForgotPasswordResponse> {
     if (!isValidEmail(email)) {
       return {
@@ -96,19 +106,19 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  async me(@Ctx() { req }: TypeORMContext): Promise<User | null> {
+  async me(@Ctx() { req }: Context): Promise<User | null> {
     // user not logged in
-    if (!req.session.userID) {
+    if (!req.session.userId) {
       return null
     }
-    return User.findOneBy({ id: req.session.userID })
+    return User.findOneBy({ id: req.session.userId })
   }
 
   @Mutation(() => UserResponse)
   async register(
     @Arg('options', () => EmailUsernamePasswordInput)
     options: EmailUsernamePasswordInput,
-    @Ctx() { orm, req }: TypeORMContext
+    @Ctx() { orm, req }: Context
   ): Promise<UserResponse> {
     const { email, username, password } = options
     const errors = validateRegister(email, username, password)
@@ -137,7 +147,7 @@ export class UserResolver {
       }
       console.error(err)
     }
-    req.session.userID = user.id // automatically initialise a session when registered successfully
+    req.session.userId = user.id // automatically initialise a session when registered successfully
     return { user }
   }
 
@@ -156,7 +166,7 @@ export class UserResolver {
   async login(
     @Arg('options', () => LoginInputs)
     options: LoginInputs,
-    @Ctx() { req }: TypeORMContext
+    @Ctx() { req }: Context
   ): Promise<UserResponse> {
     const { emailOrUsername, password } = options
     const { input, errors } = validateLogin(emailOrUsername, password)
@@ -197,7 +207,7 @@ export class UserResolver {
 
     /*
       When logged in succesfully:
-      - Initialise the req.session object by setting the userID property to the user.id. 
+      - Initialise the req.session object by setting the userId property to the user.id. 
       The req.session object will then be saved to the store (in this case redis).
       - Because req.session has just been initialised,
       a new cookie with a newly generated session ID will be sent to the client and set to the browser.
@@ -206,7 +216,7 @@ export class UserResolver {
       When the server sees a valid session cookie, it fetches the session data from the store using
       the session ID and attaches that data to the request object.
     */
-    req.session.userID = user.id
+    req.session.userId = user.id
 
     return { user }
   }
@@ -232,7 +242,7 @@ export class UserResolver {
   */
 
   @Mutation(() => Boolean)
-  logout(@Ctx() { req, res }: TypeORMContext): Promise<boolean> {
+  logout(@Ctx() { req, res }: Context): Promise<boolean> {
 
     /* 
       Here we use Promise instead of async/await because 

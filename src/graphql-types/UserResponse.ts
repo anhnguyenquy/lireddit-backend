@@ -1,5 +1,4 @@
-// import { User } from '../entities/MikroORM'
-import { User } from '../entities/TypeORM'
+import { User } from '../entities'
 import { ObjectType, Field } from 'type-graphql'
 import { FieldError } from './FieldError'
 

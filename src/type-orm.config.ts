@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm'
-import { Post, User } from './entities/TypeORM'
+import { Post, Updoot, User } from './entities'
 import path from 'path'
 
 export default {
@@ -9,7 +9,7 @@ export default {
   password: 'postgres',
   logging: true,
   synchronize: true, // create the tables automatically so we don't have to run migrations
-  entities: [Post, User],
+  entities: [Post, User, Updoot],
   migrationsTableName: 'type_orm_migrations',
   migrations: [path.join(__dirname, './migrations/*')],
   cli: {
