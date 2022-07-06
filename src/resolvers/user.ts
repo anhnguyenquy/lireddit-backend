@@ -15,7 +15,7 @@ export class UserResolver {
     @Root() user: User,
     @Ctx() { req }: Context
   ): string | null {
-    if (req.session.userId === user.id) {
+    if (req.session.userId == user.id) {
       return user.email!
     }
     return ''

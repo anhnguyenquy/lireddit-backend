@@ -7,7 +7,9 @@ import session from 'express-session'
 import Redis from 'ioredis'
 import 'reflect-metadata'
 import { buildSchema } from 'type-graphql'
+import { DataSource } from 'typeorm'
 import { COOKIE_NAME, __prod__ } from './constants'
+import { createUpdootLoader, createUserLoader } from './loaders'
 import { HelloResolver, PostResolver, UserResolver } from './resolvers'
 import typeORMSource from './type-orm.source'
 import { Context } from './types'
@@ -53,12 +55,12 @@ const main = async () => {
         httpOnly: true,         // prevents client-side javascript from accessing cookies
         sameSite: 'lax',        // prevents csrf | for apollo to work, set this to 'none'
         secure: __prod__        // only send cookie over https. 
-                                // for appollo to work, set this to true
+        // for appollo to work, set this to true
       },
       secret: process.env.REDIS_SECRET!,
       saveUninitialized: false, // don't save empty req.session objects to the store
       resave: false             // ensures express-session doesn't try to resave the session to redis
-                                // if it's not modified
+      // if it's not modified
     })
   )
 
@@ -77,7 +79,14 @@ const main = async () => {
     }),
 
     // context is the object that is passed to all resolvers
-    context: ({ req, res }): Context => ({ orm, req, res, redis })
+    context: ({ req, res }): Context => ({
+      orm,
+      req,
+      res,
+      redis,
+      userLoader: createUserLoader(),
+      updootLoader: createUpdootLoader()
+    })
   })
 
   await apolloServer.start()

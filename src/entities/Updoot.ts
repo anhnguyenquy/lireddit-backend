@@ -28,7 +28,9 @@ export class Updoot extends BaseEntity {
 
   @Field(() => Post)
   // Many Updoots are linked to One Post
-  @ManyToOne(() => Post, post => post.updoots)
+  @ManyToOne(() => Post, post => post.updoots, {
+    onDelete: 'CASCADE' // when a post is deleted, delete the updoots linked to it as well
+  })
   post: Post
 
 }
