@@ -15,17 +15,18 @@ import { Context } from './types'
 
 const main = async () => {
   const orm = await typeORMSource.initialize()
-  // await Post.delete({})
-  await orm.runMigrations()        // runs the migrations
+  await orm.runMigrations()
   const app = express()
   app.use(cors({
     credentials: true,
-    origin: !__prod__ ? '*' : process.env.CORS_ORIGIN
+    origin: !__prod__ ? ['http://localhost:3000', 'https://studio.apollographql.com'] :
+      process.env.CORS_ORIGIN
   }))
 
   const RedisStore = connectRedis(session)
 
   const redis = new Redis(process.env.REDIS_URL)
+  app.set('trust proxy', !__prod__)
   app.set('proxy', 1)
 
   /* 
