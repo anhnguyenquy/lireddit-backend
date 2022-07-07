@@ -94,13 +94,16 @@ export class PostResolver {
   */
   @Query(() => PaginatedPosts)
   async posts(
-    @Ctx() { orm, req }: Context,
+    @Ctx() { 
+      orm,
+      // req
+    }: Context,
     @Arg('limit', () => Int) limit: number,
 
     // offset -> exclude the first n elements; cursor -> all items after a specific value
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null
   ): Promise<PaginatedPosts> {
-    const { userId } = req.session
+    // const { userId } = req.session
     // DESC: latest to oldest; ASC: oldest to latest
     const realLimit = Math.min(limit, 50)
     const realLimitPlusOne = realLimit + 1
@@ -136,7 +139,7 @@ export class PostResolver {
   @Query(() => Post, { nullable: true }) // nullable controls whether null can be returned
   async post(
     @Arg('id', () => Int) id: number,    // Arg validates the type of the argument else it throws an error
-    @Ctx() { orm }: Context
+    // @Ctx() { orm }: Context
   ): Promise<Post | null> {
 
     // This is unnecessary if the creator FieldResolver is used

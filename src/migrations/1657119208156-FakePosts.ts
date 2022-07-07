@@ -1,8 +1,10 @@
-import { MigrationInterface, QueryRunner } from "typeorm"
+import { __prod__ } from '../constants'
+import { MigrationInterface, QueryRunner } from 'typeorm'
 
-export class FakePosts1656524545827 implements MigrationInterface {
+export class FakePosts1657119208156 implements MigrationInterface {
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    if (!__prod__) {
       await queryRunner.query(`
 insert into post (title, text, "creatorId", "createdAt") values ('Virunga', 'Maecenas ut massa quis augue luctus tincidunt. Nulla mollis molestie lorem. Quisque ut erat.', 1, '2021-11-25T02:59:42Z');
 insert into post (title, text, "creatorId", "createdAt") values ('Other Side of Heaven, The', 'Proin eu mi. Nulla ac enim. In tempor, turpis nec euismod scelerisque, quam turpis adipiscing lorem, vitae mattis nibh ligula nec sem.
@@ -304,8 +306,14 @@ insert into post (title, text, "creatorId", "createdAt") values ('April Fool''s 
 Suspendisse potenti. In eleifend quam a odio. In hac habitasse platea dictumst.', 1, '2022-06-21T18:58:28Z');
       `)
     }
+  }
 
-    public async down(_: QueryRunner): Promise<void> {
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    if (!__prod__) {
+      await queryRunner.query(`
+        DELETE FROM "post"
+      `)
     }
+  }
 
 }

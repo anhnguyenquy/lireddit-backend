@@ -7,7 +7,6 @@ interface LoginValidation {
 }
 
 export const validateLogin = (emailOrUsername: string, password: string): LoginValidation => {
-  let input: 'Username' | 'Email'
   const result: LoginValidation = {
     input: 'Email',
     errors: []

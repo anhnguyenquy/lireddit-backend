@@ -1,13 +1,12 @@
-require('dotenv').config()
+import 'reflect-metadata'
+import 'dotenv-safe/config'
 import { ApolloServer } from 'apollo-server-express'
 import connectRedis from 'connect-redis'
 import cors from 'cors'
 import express from 'express'
 import session from 'express-session'
 import Redis from 'ioredis'
-import 'reflect-metadata'
 import { buildSchema } from 'type-graphql'
-import { DataSource } from 'typeorm'
 import { COOKIE_NAME, __prod__ } from './constants'
 import { createUpdootLoader, createUserLoader } from './loaders'
 import { HelloResolver, PostResolver, UserResolver } from './resolvers'
@@ -18,21 +17,25 @@ const main = async () => {
   const orm = await typeORMSource.initialize()
   // await Post.delete({})
   await orm.runMigrations()        // runs the migrations
-
   const app = express()
   app.use(cors({
     credentials: true,
-    origin: !__prod__ ? [
-      'https://studio.apollographql.com',
-      'http://localhost:3000'
-    ] : []
+    origin: !__prod__ ?
+      [
+        process.env.CORS_ORIGIN_APOLLO,
+        process.env.CORS_ORIGIN_LOCAL
+      ] :
+      [
+        process.env.CORS_ORIGIN
+      ]
   }
   ))
 
   const RedisStore = connectRedis(session)
 
-  const redis = new Redis()
+  const redis = new Redis(process.env.REDIS_URL)
   app.set('trust proxy', !__prod__)
+  app.set('proxy', 1)
 
   /* 
     The session middleware checks for session cookie and:
@@ -52,20 +55,19 @@ const main = async () => {
       }),
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
-        httpOnly: true,         // prevents client-side javascript from accessing cookies
-        sameSite: 'lax',        // prevents csrf | for apollo to work, set this to 'none'
-        secure: __prod__        // only send cookie over https. 
-        // for appollo to work, set this to true
-      },
-      secret: process.env.REDIS_SECRET!,
+        httpOnly: true,                         // prevents client-side javascript from accessing cookies
+        sameSite: __prod__ ? 'lax' : 'none',    // prevents csrf | for apollo to work, set this to 'none'
+        secure: true,                           // only send cookie over https. 
+        domain: __prod__ ? process.env.DOMAIN_SUFFIX : undefined
+      }, 
+      secret: process.env.REDIS_SECRET,
       saveUninitialized: false, // don't save empty req.session objects to the store
       resave: false             // ensures express-session doesn't try to resave the session to redis
-      // if it's not modified
-    })
+    })                          // if it's not modified
   )
 
-  app.listen(4000, () => {
-    console.log('server started on localhost:4000')
+  app.listen(parseInt(process.env.PORT), () => {
+    console.log(`server started on localhost:${process.env.PORT}`)
   })
   app.get('/', (_, res) => {
     res.send('hello world')
