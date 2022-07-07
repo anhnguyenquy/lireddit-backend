@@ -7,7 +7,7 @@ import express from 'express'
 import session from 'express-session'
 import Redis from 'ioredis'
 import { buildSchema } from 'type-graphql'
-import { COOKIE_NAME, __prod__ } from './constants'
+import { COOKIE_NAME } from './constants'
 import { createUpdootLoader, createUserLoader } from './loaders'
 import { HelloResolver, PostResolver, UserResolver } from './resolvers'
 import typeORMSource from './type-orm.source'
@@ -15,26 +15,16 @@ import { Context } from './types'
 
 const main = async () => {
   const orm = await typeORMSource.initialize()
-  // await Post.delete({})
   await orm.runMigrations()        // runs the migrations
   const app = express()
   app.use(cors({
     credentials: true,
-    origin: !__prod__ ?
-      [
-        process.env.CORS_ORIGIN_APOLLO,
-        process.env.CORS_ORIGIN_LOCAL
-      ] :
-      [
-        process.env.CORS_ORIGIN
-      ]
-  }
-  ))
+    origin: process.env.CORS_ORIGIN
+  }))
 
   const RedisStore = connectRedis(session)
 
   const redis = new Redis(process.env.REDIS_URL)
-  app.set('trust proxy', !__prod__)
   app.set('proxy', 1)
 
   /* 
@@ -56,21 +46,22 @@ const main = async () => {
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: true,                         // prevents client-side javascript from accessing cookies
-        sameSite: __prod__ ? 'lax' : 'none',    // prevents csrf | for apollo to work, set this to 'none'
+        sameSite: 'lax',                        // prevents csrf | for apollo to work, set this to 'none'
         secure: true,                           // only send cookie over https. 
-        domain: __prod__ ? process.env.DOMAIN_SUFFIX : undefined
-      }, 
+        domain: process.env.DOMAIN_SUFFIX
+      },
       secret: process.env.REDIS_SECRET,
       saveUninitialized: false, // don't save empty req.session objects to the store
       resave: false             // ensures express-session doesn't try to resave the session to redis
     })                          // if it's not modified
   )
 
-  app.listen(parseInt(process.env.PORT), () => {
-    console.log(`server started on localhost:${process.env.PORT}`)
+  app.listen(parseInt(process.env.API_PORT!), () => {
+    console.log(`Server started on port ${process.env.API_PORT}.`)
   })
+
   app.get('/', (_, res) => {
-    res.send('hello world')
+    res.send('This is LiReddit\'s GraphQL API. Start querying at /graphql.')
   })
 
   // Creates a GraphQL endpoint
