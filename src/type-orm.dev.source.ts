@@ -5,11 +5,7 @@ import { Post, Updoot, User } from './entities'
 
 export default new DataSource({
   type: 'postgres',
-  username: 'postgres',
-  password: 'postgres',
-  database: 'lireddit3',
-  host: 'localhost',
-  port: 5432,
+  url: process.env.DB_URL,
   logging: true,
   synchronize: false,
   entities: [Post, User, Updoot],

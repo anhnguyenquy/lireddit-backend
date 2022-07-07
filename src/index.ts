@@ -1,11 +1,11 @@
-import 'reflect-metadata'
-import 'dotenv-safe/config'
 import { ApolloServer } from 'apollo-server-express'
 import connectRedis from 'connect-redis'
 import cors from 'cors'
+import 'dotenv-safe/config'
 import express from 'express'
 import session from 'express-session'
 import Redis from 'ioredis'
+import 'reflect-metadata'
 import { buildSchema } from 'type-graphql'
 import { COOKIE_NAME, __prod__ } from './constants'
 import { createUpdootLoader, createUserLoader } from './loaders'
@@ -20,21 +20,12 @@ const main = async () => {
   const app = express()
   app.use(cors({
     credentials: true,
-    origin: !__prod__ ?
-      [
-        process.env.CORS_ORIGIN_APOLLO,
-        process.env.CORS_ORIGIN_LOCAL
-      ] :
-      [
-        process.env.CORS_ORIGIN
-      ]
-  }
-  ))
+    origin: !__prod__ ? '*' : process.env.CORS_ORIGIN
+  }))
 
   const RedisStore = connectRedis(session)
 
   const redis = new Redis(process.env.REDIS_URL)
-  app.set('trust proxy', !__prod__)
   app.set('proxy', 1)
 
   /* 
@@ -59,18 +50,18 @@ const main = async () => {
         sameSite: __prod__ ? 'lax' : 'none',    // prevents csrf | for apollo to work, set this to 'none'
         secure: true,                           // only send cookie over https. 
         domain: __prod__ ? process.env.DOMAIN_SUFFIX : undefined
-      }, 
+      },
       secret: process.env.REDIS_SECRET,
       saveUninitialized: false, // don't save empty req.session objects to the store
       resave: false             // ensures express-session doesn't try to resave the session to redis
     })                          // if it's not modified
   )
 
-  app.listen(parseInt(process.env.PORT), () => {
-    console.log(`server started on localhost:${process.env.PORT}`)
+  app.listen(parseInt(process.env.API_PORT!), () => {
+    console.log(`Rerver started on localhost:${process.env.API_PORT}.`)
   })
   app.get('/', (_, res) => {
-    res.send('hello world')
+    res.send('This is LiReddit\'s GraphQL API. Start querying at /graphql.')
   })
 
   // Creates a GraphQL endpoint

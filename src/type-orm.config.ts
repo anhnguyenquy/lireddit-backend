@@ -1,7 +1,6 @@
+import path from 'path'
 import { DataSource } from 'typeorm'
 import { Post, Updoot, User } from './entities'
-import path from 'path'
-import { __prod__ } from './constants'
 
 export default {
   type: 'postgres',
