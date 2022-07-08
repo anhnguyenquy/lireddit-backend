@@ -27,7 +27,6 @@ const main = async () => {
 
   const redis = new Redis(process.env.REDIS_URL)
   app.set('trust proxy', true)
-  app.set('proxy', 1)
 
   /* 
     The session middleware checks for session cookie and:
