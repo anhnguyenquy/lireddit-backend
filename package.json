@@ -1,7 +1,7 @@
 {
-  "name": "server",
+  "name": "lireddit-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend for lireddit. Uses PostgreSQL, Redis, and ExpressJS. Hosted with Dokku on AWS.",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
