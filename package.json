@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
+    "yarn:migrate": "yarn set version berry && echo \"nodeLinker: node-modules\" >> .yarnrc.yml && yarn install",
     "gen-env": "npx gen-env-types .env.development -o src/env.d.ts -e .",
     "build": "tsc",
     "watch": "tsc -w",

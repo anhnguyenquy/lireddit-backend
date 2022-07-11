@@ -3,3 +3,5 @@
 yarn-error.log
 /dist
 .env
+.yarnrc.yml
+yarn.lock
