@@ -58,7 +58,7 @@ const main = async () => {
   )
 
   app.listen(parseInt(process.env.API_PORT!), () => {
-    console.log(`Rerver started on localhost:${process.env.API_PORT}.`)
+    console.log(`Server started on localhost:${process.env.API_PORT}.`)
   })
   app.get('/', (_, res) => {
     res.send('This is LiReddit\'s GraphQL API. Start querying at /graphql.')
